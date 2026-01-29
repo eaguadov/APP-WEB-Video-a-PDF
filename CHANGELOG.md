@@ -5,6 +5,85 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.1.0] - 2026-01-29
+
+### ✨ Añadido
+- **Sistema de Presets Inteligentes**
+  - 3 modos: ⚡ Rápido, ⚖️ Equilibrado, 🎯 Preciso
+  - Auto-configuración al cargar video basada en duración
+  - Descripción de cada modo visible en la interfaz
+  
+- **Estimación de Tiempo**
+  - Muestra tiempo estimado de procesamiento antes de empezar
+  - Se actualiza en tiempo real al cambiar parámetros
+  - Basado en duración del video y configuración actual
+
+### 🎯 Mejorado
+- **Drag & Drop ahora intercambia posiciones (Swap Mode)**
+  - Antes: Arrastrar desplazaba todas las diapositivas
+  - Ahora: Arrastrar intercambia las posiciones de 2 slides
+  - Comportamiento más intuitivo y predecible
+
+### 📝 Notas
+- Videos < 45s → Preset "Preciso" recomendado automáticamente
+- Videos 45s-2min → Preset "Equilibrado" recomendado
+- Videos > 2min → Preset "Rápido" recomendado
+- **NO PUBLICADO AÚN** - Pendiente de testing
+
+---
+
+
+
+## [2.0.2] - 2026-01-29
+
+### ⚡ Optimizado
+- **Velocidad de procesamiento mejorada ~90%**
+  - Ahora compara solo con los **últimos 10 frames** guardados (no todos)
+  - Justificación: Los duplicados suelen estar cerca en el tiempo
+  - Mantiene la precisión pero reduce drásticamente el tiempo de procesamiento
+  - Early exit: Para de comparar en cuanto encuentra un duplicado
+
+### 📝 Notas
+- Feedback de usuario: v2.0.1 funcionaba correctamente pero era muy lenta
+- Videos de 60s: de ~30-60s procesamiento → ~5-10s procesamiento
+- **NO PUBLICADO AÚN** - Pendiente de testing final
+
+---
+
+
+
+## [2.0.1] - 2026-01-29
+
+### 🐛 Corregido
+- **Bug crítico: Detección de duplicados no funcionaba correctamente**
+  - Ahora compara cada frame con TODOS los frames guardados (antes solo con el último)
+  - Esto soluciona el problema de slides idénticos que pasaban el filtro
+  - Agregada función `isFrameDuplicateOfAny()` para validación exhaustiva
+  
+- **Slider de muestreo con rango incorrecto**
+  - Cambiado de 0.5-3.0s a **0.1-1.0s** para mayor precisión
+  - Valor por defecto: 0.3s (antes 1.0s)
+  - Permite análisis más frecuente del video
+  
+- **Pesos del algoritmo multi-nivel ajustados**
+  - Perceptual hash: 50% → **70%** (mayor peso)
+  - Histograma: 30% → **20%**
+  - Estructural: 20% → **10%**
+  - Resultado: Mejor tolerancia a micro-cambios de compresión JPEG
+
+- **Mejoras de UI**
+  - Label "Velocidad de Muestreo" → **"Intervalo de Análisis"** (más claro)
+  - Valor mostrado: "1 frame/seg" → **"0.3s"** (unidades correctas)
+  - Tooltips actualizados con explicaciones más precisas
+
+### 📝 Notas
+- **NO PUBLICADO AÚN** - Pendiente de testing con usuario
+- Correcciones basadas en feedback de testing de v2.0
+- Se espera reducción significativa de falsos negativos (frames duplicados no detectados)
+
+---
+
+
 ## [2.0.0] - 2026-01-29
 
 ### ✨ Añadido

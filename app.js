@@ -1,7 +1,7 @@
 /**
- * Video to PDF Converter v2.0
+ * Video to PDF Converter v2.1
  * Extracts unique frames from presentation videos and generates a PDF
- * New in v2.0: Drag & drop reordering, improved duplicate detection, transition detection
+ * New in v2.1: Smart presets, time estimation, swap mode for reordering
  */
 
 // ============================================
@@ -13,10 +13,37 @@ const state = {
     frames: [],
     selectedFrames: new Set(),
     sensitivity: 95,
-    samplingRate: 0.3, // Check every 0.3 seconds for stability
+    samplingRate: 0.5, // Default for balanced mode
     stabilityFrames: 3, // How many stable frames before capturing
     isProcessing: false,
-    sortable: null
+    sortable: null,
+    currentPreset: 'balanced',
+    videoDuration: 0
+};
+
+// Preset configurations
+const PRESETS = {
+    fast: {
+        name: 'Rápido',
+        samplingRate: 0.8,
+        sensitivity: 92,
+        stabilityFrames: 2,
+        description: 'Procesamiento rápido. Ideal para videos largos o cuando tienes prisa.'
+    },
+    balanced: {
+        name: 'Equilibrado',
+        samplingRate: 0.5,
+        sensitivity: 95,
+        stabilityFrames: 3,
+        description: 'Equilibrio entre velocidad y precisión. Recomendado para la mayoría de videos.'
+    },
+    precise: {
+        name: 'Preciso',
+        samplingRate: 0.3,
+        sensitivity: 97,
+        stabilityFrames: 4,
+        description: 'Máxima precisión. Ideal para videos con muchas animaciones o popups.'
+    }
 };
 
 // ============================================
@@ -46,7 +73,13 @@ const elements = {
     frameGallery: document.getElementById('frameGallery'),
     emptyState: document.getElementById('emptyState'),
     generatePdfBtn: document.getElementById('generatePdfBtn'),
-    hiddenCanvas: document.getElementById('hiddenCanvas')
+    hiddenCanvas: document.getElementById('hiddenCanvas'),
+    // New preset elements
+    presetFast: document.getElementById('presetFast'),
+    presetBalanced: document.getElementById('presetBalanced'),
+    presetPrecise: document.getElementById('presetPrecise'),
+    presetDescription: document.getElementById('presetDescription'),
+    estimatedTime: document.getElementById('estimatedTime')
 };
 
 // ============================================
@@ -54,7 +87,8 @@ const elements = {
 // ============================================
 function init() {
     setupEventListeners();
-    console.log('📹 Video to PDF Converter v2.0 initialized');
+    setupPresetListeners();
+    console.log('📹 Video to PDF Converter v2.1 initialized');
 }
 
 function setupEventListeners() {
@@ -73,7 +107,8 @@ function setupEventListeners() {
 
     elements.samplingSlider.addEventListener('input', (e) => {
         state.samplingRate = parseFloat(e.target.value);
-        elements.samplingValue.textContent = `${state.samplingRate} frame/seg`;
+        elements.samplingValue.textContent = `${state.samplingRate}s`;
+        updateTimeEstimation();
     });
 
     elements.stabilitySlider.addEventListener('input', (e) => {
@@ -86,6 +121,95 @@ function setupEventListeners() {
 
     // Generate PDF button
     elements.generatePdfBtn.addEventListener('click', generatePDF);
+}
+
+// ============================================
+// Preset System (v2.1)
+// ============================================
+function setupPresetListeners() {
+    const presetButtons = [elements.presetFast, elements.presetBalanced, elements.presetPrecise];
+
+    presetButtons.forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const preset = btn.dataset.preset;
+                applyPreset(preset);
+            });
+        }
+    });
+}
+
+function applyPreset(presetName) {
+    const preset = PRESETS[presetName];
+    if (!preset) return;
+
+    state.currentPreset = presetName;
+    state.samplingRate = preset.samplingRate;
+    state.sensitivity = preset.sensitivity;
+    state.stabilityFrames = preset.stabilityFrames;
+
+    // Update sliders
+    elements.samplingSlider.value = preset.samplingRate;
+    elements.samplingValue.textContent = `${preset.samplingRate}s`;
+
+    elements.sensitivitySlider.value = preset.sensitivity;
+    elements.sensitivityValue.textContent = `${preset.sensitivity}%`;
+
+    elements.stabilitySlider.value = preset.stabilityFrames;
+    elements.stabilityValue.textContent = `${preset.stabilityFrames} frames`;
+
+    // Update preset description
+    elements.presetDescription.textContent = preset.description;
+
+    // Update active button
+    [elements.presetFast, elements.presetBalanced, elements.presetPrecise].forEach(btn => {
+        if (btn) btn.classList.remove('active');
+    });
+
+    const activeBtn = document.getElementById(`preset${presetName.charAt(0).toUpperCase() + presetName.slice(1)}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // Update time estimation
+    updateTimeEstimation();
+
+    console.log(`📊 Preset aplicado: ${preset.name}`);
+}
+
+function updateTimeEstimation() {
+    if (state.videoDuration <= 0) {
+        elements.estimatedTime.textContent = '--';
+        return;
+    }
+
+    const totalChecks = Math.ceil(state.videoDuration / state.samplingRate);
+    // Estimate ~50ms per check (hash calculation + comparison)
+    const estimatedMs = totalChecks * 50;
+    const estimatedSeconds = Math.ceil(estimatedMs / 1000);
+
+    let timeText;
+    if (estimatedSeconds < 60) {
+        timeText = `~${estimatedSeconds} segundos`;
+    } else {
+        const minutes = Math.floor(estimatedSeconds / 60);
+        const seconds = estimatedSeconds % 60;
+        timeText = `~${minutes}m ${seconds}s`;
+    }
+
+    elements.estimatedTime.textContent = timeText;
+}
+
+function recommendPresetForDuration(duration) {
+    // Auto-recommend preset based on video duration
+    if (duration > 120) {
+        // Videos > 2 min: recommend fast
+        return 'fast';
+    } else if (duration > 45) {
+        // Videos 45s-2min: recommend balanced
+        return 'balanced';
+    } else {
+        // Videos < 45s: recommend precise
+        return 'precise';
+    }
 }
 
 // ============================================
@@ -146,9 +270,18 @@ function displayVideoInfo(file) {
     const minutes = Math.floor(duration / 60);
     const seconds = Math.floor(duration % 60);
 
+    // Store duration in state for time estimation
+    state.videoDuration = duration;
+
     elements.videoDuration.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     elements.videoDimensions.textContent = `${elements.videoPreview.videoWidth} × ${elements.videoPreview.videoHeight}`;
     elements.videoSize.textContent = formatFileSize(file.size);
+
+    // Auto-apply recommended preset based on video duration
+    const recommendedPreset = recommendPresetForDuration(duration);
+    applyPreset(recommendedPreset);
+
+    console.log(`📹 Video cargado: ${minutes}m ${seconds}s - Preset recomendado: ${recommendedPreset}`);
 }
 
 function formatFileSize(bytes) {
@@ -215,9 +348,8 @@ async function extractFrames() {
 
                 // If stable for required frames, consider capturing
                 if (stabilityCounter >= state.stabilityFrames) {
-                    // Check if it's different from last saved frame
-                    const isDuplicate = lastSavedHash &&
-                        compareHashes(currentHash, lastSavedHash) >= state.sensitivity;
+                    // Check if it's different from ALL saved frames (not just the last one)
+                    const isDuplicate = isFrameDuplicateOfAny(currentHash, state.frames, state.sensitivity);
 
                     if (!isDuplicate) {
                         // Convert canvas to base64
@@ -231,9 +363,10 @@ async function extractFrames() {
                         });
 
                         state.selectedFrames.add(state.frames.length - 1);
-                        lastSavedHash = currentHash;
 
                         console.log(`✅ Frame capturado en ${time.toFixed(1)}s - Total: ${state.frames.length}`);
+                    } else {
+                        console.log(`⏭️ Frame duplicado omitido en ${time.toFixed(1)}s`);
                     }
 
                     // Reset stability counter after capturing or detecting duplicate
@@ -275,8 +408,26 @@ function seekTo(video, time) {
 }
 
 // ============================================
-// Advanced Multi-Level Hash (v2.0)
+// Advanced Multi-Level Hash (v2.0.1)
 // ============================================
+function isFrameDuplicateOfAny(currentHash, allSavedFrames, threshold) {
+    // OPTIMIZATION: Only compare with the last 10 frames (not ALL frames)
+    // Rationale: Duplicates are usually consecutive or very close in time
+    const framesToCheck = Math.min(10, allSavedFrames.length);
+    const startIndex = Math.max(0, allSavedFrames.length - framesToCheck);
+
+    for (let i = startIndex; i < allSavedFrames.length; i++) {
+        const savedFrame = allSavedFrames[i];
+        const similarity = compareHashes(currentHash, savedFrame.hash);
+
+        if (similarity >= threshold) {
+            return true; // Early exit: duplicate found
+        }
+    }
+
+    return false; // Is unique
+}
+
 function calculateAdvancedHash(imageData) {
     const phash = calculatePerceptualHash(imageData);
     const histogram = calculateColorHistogram(imageData);
@@ -372,16 +523,16 @@ function calculateStructuralHash(imageData) {
 function compareHashes(hash1, hash2) {
     if (!hash1 || !hash2) return 0;
 
-    // Compare perceptual hash (50% weight)
+    // Compare perceptual hash (70% weight - increased from 50%)
     const phashSimilarity = comparePerceptualHash(hash1.perceptual, hash2.perceptual);
 
-    // Compare histogram (30% weight)
+    // Compare histogram (20% weight - decreased from 30%)
     const histogramSimilarity = compareHistograms(hash1.histogram, hash2.histogram);
 
-    // Compare structural (20% weight)
+    // Compare structural (10% weight - decreased from 20%)
     const structuralSimilarity = compareStructural(hash1.structural, hash2.structural);
 
-    const combined = phashSimilarity * 0.5 + histogramSimilarity * 0.3 + structuralSimilarity * 0.2;
+    const combined = phashSimilarity * 0.7 + histogramSimilarity * 0.2 + structuralSimilarity * 0.1;
 
     return combined;
 }
@@ -508,22 +659,25 @@ function handleFrameReorder(evt) {
 
     if (oldIndex === newIndex) return;
 
-    // Reorder frames array
-    const [movedFrame] = state.frames.splice(oldIndex, 1);
-    state.frames.splice(newIndex, 0, movedFrame);
+    // SWAP MODE: Exchange positions instead of inserting
+    // Save frames at both positions
+    const frameA = state.frames[oldIndex];
+    const frameB = state.frames[newIndex];
+
+    // Swap them
+    state.frames[oldIndex] = frameB;
+    state.frames[newIndex] = frameA;
 
     // Update selected frames indices
     const newSelected = new Set();
     state.selectedFrames.forEach(idx => {
-        let newIdx = idx;
         if (idx === oldIndex) {
-            newIdx = newIndex;
-        } else if (oldIndex < newIndex) {
-            if (idx > oldIndex && idx <= newIndex) newIdx--;
+            newSelected.add(newIndex);
+        } else if (idx === newIndex) {
+            newSelected.add(oldIndex);
         } else {
-            if (idx >= newIndex && idx < oldIndex) newIdx++;
+            newSelected.add(idx);
         }
-        newSelected.add(newIdx);
     });
     state.selectedFrames = newSelected;
 
