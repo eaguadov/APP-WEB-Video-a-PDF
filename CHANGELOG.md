@@ -5,6 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.1.1] - 2026-01-29
+
+### 🔧 Ajustado
+- **Calibración de Estimación de Tiempo**
+  - Ajustado el cálculo de tiempo estimado (de 50ms a 200ms por frame)
+  - Ahora refleja con mucha más precisión el tiempo real de procesamiento que incluye el 'seeking' del video
+  
 ## [2.1.0] - 2026-01-29
 
 ### ✨ Añadido

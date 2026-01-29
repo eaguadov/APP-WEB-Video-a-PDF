@@ -182,8 +182,8 @@ function updateTimeEstimation() {
     }
 
     const totalChecks = Math.ceil(state.videoDuration / state.samplingRate);
-    // Estimate ~50ms per check (hash calculation + comparison)
-    const estimatedMs = totalChecks * 50;
+    // Estimate ~200ms per check (seeking + capture + hash calculation + comparison)
+    const estimatedMs = totalChecks * 200;
     const estimatedSeconds = Math.ceil(estimatedMs / 1000);
 
     let timeText;
