@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Convierte videos de presentaciones PPT o Genially a PDF extrayendo diapositivas únicas">
-    <title>Video a PDF - Extractor de Diapositivas</title>
+    <meta name="description"
+        content="Convierte videos de presentaciones PPT o Genially a PDF extrayendo diapositivas únicas - v2.0">
+    <title>Video a PDF v2.0 - Extractor de Diapositivas</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
         <header>
-            <h1>📹 Video a PDF</h1>
+            <h1>📹 Video a PDF <span class="version-badge">v2.0</span></h1>
             <p class="subtitle">Extrae diapositivas únicas de tus videos de presentaciones</p>
         </header>
 
@@ -29,7 +32,7 @@
         <section id="videoSection" class="card hidden">
             <h2 class="card-title">Vista Previa del Video</h2>
             <video id="videoPreview" controls></video>
-            
+
             <div class="video-info" id="videoInfo">
                 <div class="video-info-item">
                     <span class="video-info-label">Duración</span>
@@ -49,21 +52,14 @@
         <!-- Controls Section -->
         <section id="controlsSection" class="card hidden">
             <h2 class="card-title">⚙️ Configuración de Extracción</h2>
-            
+
             <div class="controls">
                 <div class="control-group">
                     <label>
                         Sensibilidad de Detección de Duplicados
                         <span class="slider-value" id="sensitivityValue">95%</span>
                     </label>
-                    <input 
-                        type="range" 
-                        id="sensitivitySlider" 
-                        min="80" 
-                        max="99" 
-                        value="95" 
-                        step="1"
-                    >
+                    <input type="range" id="sensitivitySlider" min="80" max="99" value="95" step="1">
                     <small style="color: var(--text-muted);">
                         Mayor valor = menos duplicados (más estricto)
                     </small>
@@ -74,16 +70,20 @@
                         Velocidad de Muestreo
                         <span class="slider-value" id="samplingValue">1 frame/seg</span>
                     </label>
-                    <input 
-                        type="range" 
-                        id="samplingSlider" 
-                        min="0.5" 
-                        max="3" 
-                        value="1" 
-                        step="0.5"
-                    >
+                    <input type="range" id="samplingSlider" min="0.5" max="3" value="1" step="0.5">
                     <small style="color: var(--text-muted);">
                         Menor valor = más frames analizados (más preciso pero más lento)
+                    </small>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Estabilidad de Transición
+                        <span class="slider-value" id="stabilityValue">3 frames</span>
+                    </label>
+                    <input type="range" id="stabilitySlider" min="2" max="5" value="3" step="1">
+                    <small style="color: var(--text-muted);">
+                        Cuántos frames estables antes de capturar (evita transiciones a medio completar)
                     </small>
                 </div>
 
@@ -105,11 +105,12 @@
         <section id="gallerySection" class="card hidden">
             <h2 class="card-title">🖼️ Diapositivas Detectadas</h2>
             <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
-                Haz clic en las imágenes para incluir/excluir. Haz clic en ❌ para eliminar.
+                <strong>✨ Nuevo en v2.0:</strong> Arrastra las diapositivas para reordenarlas. Haz clic en ❌ para
+                eliminar.
             </p>
-            
+
             <div id="frameGallery" class="frame-gallery"></div>
-            
+
             <div class="empty-state" id="emptyState">
                 <div class="empty-state-icon">📭</div>
                 <p>No se detectaron diapositivas aún</p>
@@ -126,8 +127,10 @@
 
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
     <!-- Main Application -->
     <script src="app.js"></script>
 </body>
+
 </html>

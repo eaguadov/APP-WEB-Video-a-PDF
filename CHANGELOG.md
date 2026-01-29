@@ -5,6 +5,49 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto sigue [Semantic Versioning](https://semver.org/lang/es/).
 
+## [2.0.0] - 2026-01-29
+
+### ✨ Añadido
+- **Reordenamiento de diapositivas con Drag & Drop**
+  - Integración de SortableJS para arrastrar y soltar frames
+  - Indicador visual de drag handle (⋮⋮)
+  - Animaciones suaves durante el reordenamiento
+  - El PDF se genera en el orden mostrado en la galería
+
+- **Detección mejorada de duplicados - Algoritmo Multi-Nivel**
+  - Hash perceptual mejorado (32x32 píxeles, antes 16x16)
+  - Comparación de histogramas de color RGB
+  - Análisis estructural por cuadrantes (grid 3x3)
+  - Score combinado con pesos: 50% perceptual + 30% histograma + 20% estructural
+  - Mayor precisión en la detección de diapositivas con cambios sutiles
+
+-**Detección de Transición Completa**
+  - Nuevo algoritmo de estabilidad temporal
+  - Solo captura frames cuando el contenido está estable
+  - Evita capturar frames durante animaciones o transiciones
+  - Parámetro configurable: frames estables necesarios (2-5)
+  - Muestreo adaptativo cada 0.3 segundos
+
+- **Mejoras de UI**
+  - Badge de versión "v2.0" en el header
+  - Nuevo slider de "Estabilidad de Transición"
+  - Tooltips explicativos mejorados
+  - Estilos visuales para drag & drop (ghost, cursor grab/grabbing)
+  - Nombres de archivo PDF incluyen "v2" para diferenciación
+
+### 🔄 Cambiado
+- **Algoritmo de captura**: De intervalo fijo a detección por estabilidad
+- **Velocidad de muestreo**: Ahora comprueba cada 0.3s en lugar de 1s
+- **Procesamiento**: Analiza más frames pero detecta mejor los duplicados
+
+### 📝 Notas
+- Esperado: Reducción significativa de duplicados (de ~28 a ~8-12 slides en video de ejemplo)
+- El procesamiento puede tardar ligeramente más, pero la calidad mejora sustancialmente
+- Compatible con proyectos v1.0 (sin breaking changes en el PDF generado)
+
+---
+
+
 ## [1.0.0] - 2026-01-29
 
 ### ✨ Añadido
